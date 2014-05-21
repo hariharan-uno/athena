@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"bytes"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -38,14 +39,26 @@ func ResultHandler(w http.ResponseWriter, r *http.Request) {
 	client := urlfetch.Client(c)
 	result := matchSelector(s, client)
 
-	fmt.Fprintf(w, "%s : %s\n-----\n%s", s.URL, s.Selector, result)
+	buf := new(bytes.Buffer)
+
+	x := struct {
+		Result []string
+		S      Selection
+	}{result, *s}
+
+	err = templates.ExecuteTemplate(buf, "result.html", x)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	io.Copy(w, buf)
+	//	fmt.Fprintf(w, "%s : %s\n-----\n%s", s.URL, s.Selector, result)
 }
 
-func matchSelector(s *Selection, client *http.Client) string {
+func matchSelector(s *Selection, client *http.Client) []string {
 	link, err := url.Parse(s.URL)
 	if err != nil {
 		log.Fatal("Incorrect url")
-		return ""
+		return nil
 	}
 	r, err := client.Get(link.String())
 	if err != nil {
@@ -61,10 +74,9 @@ func matchSelector(s *Selection, client *http.Client) string {
 		log.Fatal(err)
 	}
 	matches := sel.MatchAll(doc)
-	var result string
+	var result []string
 	for _, m := range matches {
-		result += nodeString(m)
-		result += "\n"
+		result = append(result, nodeString(m))
 	}
 	return result
 }

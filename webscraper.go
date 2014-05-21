@@ -15,7 +15,7 @@ type Selection struct {
 	URL      string `schema:"url"`
 }
 
-var templates = template.Must(template.ParseFiles("index.html"))
+var templates = template.Must(template.ParseFiles("index.html", "result.html"))
 
 // InputHandler returns a HTML form for selector string input.
 func InputHandler(w http.ResponseWriter, r *http.Request) {
