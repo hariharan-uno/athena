@@ -29,6 +29,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string) {
 	err := templates.ExecuteTemplate(buf, tmpl+".html", "")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	io.Copy(w, buf)
 }
